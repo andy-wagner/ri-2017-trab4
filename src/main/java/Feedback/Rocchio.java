@@ -13,7 +13,8 @@ public class Rocchio {
     private String relevanceType;
     private Map<Integer, List<String>> queries;
     private Map<Integer, Values> tenFirstDocuments;
-    private Map<Integer, Map<String, Double>> queriesVectors;
+    private Map<Integer, Map<String, Double>> q0;
+    private Map<Integer, Map<String, Double>> queryVectors;
     private Map<String, Values> termIndexer;
     
     public Rocchio(Map<Integer, List<String>> queries, Map<Integer, Values> tenFirstDocuments, String relevanceType,
@@ -22,20 +23,25 @@ public class Rocchio {
         this.tenFirstDocuments = tenFirstDocuments;
         this.relevanceType = relevanceType;
         this.termIndexer = termIndexer;
-        queriesVectors = new HashMap<>();
+        q0 = new HashMap<>();
+        queryVectors = new HashMap<>();
     }
     
-    public void calculateWeightsOfQueryVector() {
-        for (Map.Entry<Integer, List<String>> query : queries.entrySet()) {
+    public void calculateRocchio() {
+        for(Map.Entry<Integer, List<String>> query : queries.entrySet()) {
             int queryId = query.getKey();
-            List<String> terms = query.getValue();
-            Map<String, Double> termsWeights = new HashMap<>();
-            for (String term : terms) {
-                Map<Integer, Double> documents = getDocumentsFromTerm(term, queryId);
-                termsWeights.put(term, calculateTermWeight(documents));
-           }
-            queriesVectors.put(queryId, termsWeights);
+            // Calculate q0
+            calculateWeightsOfQuery(queryId, query.getValue(), q0);
         }
+    }
+    
+    private void calculateWeightsOfQuery(int queryId, List<String> terms, Map<Integer, Map<String, Double>> map) {
+        Map<String, Double> termsWeights = new HashMap<>();
+        for (String term : terms) {
+            Map<Integer, Double> documents = getDocumentsFromTerm(term, queryId);
+            termsWeights.put(term, calculateTermWeight(documents));
+       }
+        map.put(queryId, termsWeights);
     }
     
     private Map<Integer, Double> getDocumentsFromTerm(String term, int queryId) {

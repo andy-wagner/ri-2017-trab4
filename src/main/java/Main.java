@@ -116,7 +116,7 @@ public class Main {
             explicit.setTenFirstDocuments(queryScorer);
             Map<Integer, Values> feedback = explicit.getDocuments();
             Rocchio rocchio = new Rocchio(queries, feedback, "explicit", documentWeighter.getIndexer());
-            rocchio.calculateWeightsOfQueryVector();
+            rocchio.calculateRocchio();
         } else {
             System.err.println("ERROR: Invalid number of arguments!");
             System.out.println("USAGE: <file/dir> <stopwords> <queries> <gold standard> <indexer weights> <ranked queries>");

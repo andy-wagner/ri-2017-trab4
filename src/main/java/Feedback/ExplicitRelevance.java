@@ -4,6 +4,7 @@ import Utils.Values;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ExplicitRelevance implements RelevanceFeedback{
     private final Map<Integer, Values> tenFirsDocuments;
@@ -35,16 +36,16 @@ public class ExplicitRelevance implements RelevanceFeedback{
     }
 
     @Override
-    public Map<Integer, Double> getRelevantDocumentsOfQueries(int queryId) {
-        Map<Integer, Double> relevantDocuments = new HashMap<>();
-        Values queryDocuments = tenFirsDocuments.get(queryId);
-        Values gsDocuments = gsRelevants.get(queryId);
-        if (queryDocuments != null && gsDocuments != null) {
-            for (Map.Entry<Integer, Double> document : queryDocuments.getValues().entrySet()) {
-                if (gsDocuments.getValues().containsKey(document.getKey()))
-                    relevantDocuments.put(document.getKey(), document.getValue());
-            }
-        }
-        return relevantDocuments;
+    public Map<Integer, Double> getRelevantDocuments(int queryId) {
+        return tenFirsDocuments.get(queryId).getValues().entrySet().stream()
+                .filter(map -> gsRelevants.get(queryId).getValues().containsKey(map.getKey()))
+                .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+    }
+
+    @Override
+    public Map<Integer, Double> getNonRelevantDocuments(int queryId) {
+        return tenFirsDocuments.get(queryId).getValues().entrySet().stream()
+                .filter(map -> !gsRelevants.get(queryId).getValues().containsKey(map.getKey()))
+                .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
     }
 }

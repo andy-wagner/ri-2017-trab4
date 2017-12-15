@@ -1,6 +1,7 @@
 package Feedback;
 
 import Utils.Values;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -34,7 +35,12 @@ public class ImplicitRelevance implements RelevanceFeedback{
     }
 
     @Override
-    public Map<Integer, Double> getRelevantDocumentsOfQueries(int queryId) {
+    public Map<Integer, Double> getRelevantDocuments(int queryId) {
         return tenFirsDocuments.get(queryId).getValues();
+    }
+
+    @Override
+    public Map<Integer, Double> getNonRelevantDocuments(int queryId) {
+        return new HashMap<>();
     }
 }
