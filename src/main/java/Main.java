@@ -1,20 +1,21 @@
-import CorpusReader.CorpusReader;
-import Documents.Document;
-import Documents.GSDocument;
-import Feedback.ExplicitRelevance;
-import Feedback.Rocchio;
-import Indexers.IndexerCreator;
-import Parsers.GSParser;
-import Weighters.DocumentWeighter;
-import Parsers.Parser;
-import Parsers.QueryParser;
-import Parsers.XMLParser;
-import Tokenizers.CompleteTokenizer;
-import Utils.Filter;
-import Utils.Values;
-import Weighters.QueryWeighter;
+import corpus.CorpusReader;
+import documents.Document;
+import documents.GSDocument;
+import feedback.ExplicitRelevance;
+import feedback.Rocchio;
+import indexer.IndexerCreator;
+import parsers.GSParser;
+import weighters.DocumentWeighter;
+import parsers.Parser;
+import parsers.QueryParser;
+import parsers.XMLParser;
+import tokenizers.CompleteTokenizer;
+import utils.Filter;
+import utils.Values;
+import weighters.QueryWeighter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -115,7 +116,16 @@ public class Main {
             ExplicitRelevance explicit = new ExplicitRelevance(gsRelevants);
             explicit.setTenFirstDocuments(queryScorer);
             Map<Integer, Values> feedback = explicit.getDocuments();
-            Rocchio rocchio = new Rocchio(queries, feedback, "explicit", documentWeighter.getIndexer());
+            Map<Integer, Values> relevantFeedback = new HashMap<>();
+            Map<Integer, Values> nonRelevantFeedback = new HashMap<>();
+            for (Map.Entry<Integer, Values> query : feedback.entrySet()) {
+                int queryId = query.getKey();
+                Values relevant = new Values(explicit.getRelevantDocuments(queryId));
+                relevantFeedback.put(queryId, relevant);
+                Values nonRelevant = new Values(explicit.getNonRelevantDocuments(queryId));
+                nonRelevantFeedback.put(queryId, nonRelevant);
+            }
+            Rocchio rocchio = new Rocchio(queries, feedback, documentWeighter.getIndexer(), relevantFeedback, nonRelevantFeedback);
             rocchio.calculateRocchio();
         } else {
             System.err.println("ERROR: Invalid number of arguments!");
