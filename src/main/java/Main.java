@@ -1,6 +1,7 @@
 import corpus.CorpusReader;
 import documents.Document;
 import documents.GSDocument;
+import expansion.QueryExpansion;
 import feedback.ExplicitRelevance;
 import feedback.Rocchio;
 import indexer.IndexerCreator;
@@ -127,6 +128,8 @@ public class Main {
             }
             Rocchio rocchio = new Rocchio(queries, feedback, documentWeighter.getIndexer(), relevantFeedback, nonRelevantFeedback);
             rocchio.calculateRocchio();
+            Map<Integer, Map<String, Double>> termsWeight = rocchio.getTermsWeights();
+            QueryExpansion expansion = new QueryExpansion(relevantFeedback, termsWeight);
         } else {
             System.err.println("ERROR: Invalid number of arguments!");
             System.out.println("USAGE: <file/dir> <stopwords> <queries> <gold standard> <indexer weights> <ranked queries>");

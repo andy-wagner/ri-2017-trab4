@@ -16,6 +16,7 @@ public class Rocchio {
     private Map<String, Values> termIndexer;
     private Map<Integer, Values> relevant;
     private Map<Integer, Values> nonRelevant;
+    private Map<Integer, Map<String, Double>> termsWeights;
     
     public Rocchio(Map<Integer, List<String>> queries, Map<Integer, Values> tenFirstDocuments,
             Map<String, Values> termIndexer, Map<Integer, Values> relevant, Map<Integer, Values> nonRelevant) {
@@ -25,6 +26,7 @@ public class Rocchio {
         this.relevant = relevant;
         this.nonRelevant = nonRelevant;
         queryVector = new HashMap<>();
+        termsWeights = new HashMap<>();
     }
     
     public void calculateRocchio() {
@@ -33,16 +35,15 @@ public class Rocchio {
             List<String> terms = query.getValue();
             double total = 0;
             // Calculate q0 for query
-            double q0 = calculateWeightsOfQuery(queryId, terms, tenFirstDocuments);
+            double q0 = calculateWeightsOfQuery(queryId, terms, tenFirstDocuments, false);
             Map<Integer, Double> relevantDocuments = relevant.get(queryId).getValues();
-            System.out.println(tenFirstDocuments.get(1).getValues());
             if (relevantDocuments.size() > 0) {
-                double relevantWeight = calculateWeightsOfQuery(queryId, terms, relevant);
+                double relevantWeight = calculateWeightsOfQuery(queryId, terms, relevant, true);
                 total = alpha * q0 + ((beta / relevantDocuments.size()) * relevantWeight);
             }
             Map<Integer, Double> nonRelevantDocuments = nonRelevant.get(queryId).getValues();
             if (nonRelevantDocuments.size() > 0) {
-                double nonRelevantWeight = calculateWeightsOfQuery(queryId, terms, nonRelevant);
+                double nonRelevantWeight = calculateWeightsOfQuery(queryId, terms, nonRelevant, false);
                 total -= ((sigma / nonRelevantDocuments.size()) * nonRelevantWeight);
             }
             if(total > 0)
@@ -50,12 +51,23 @@ public class Rocchio {
         }
     }
     
-    private double calculateWeightsOfQuery(int queryId, List<String> terms, Map<Integer, Values> structure) {
+    public Map<Integer, Map<String, Double>> getTermsWeights() {
+        return termsWeights;
+    }
+    
+    private double calculateWeightsOfQuery(int queryId, List<String> terms, Map<Integer, Values> structure, 
+            boolean relevant) {
         double sum = 0;
+        Map<String, Double> weights = new HashMap<>();
         for (String term : terms) {
             Map<Integer, Double> documents = filterDocumentsOfTerm(term, queryId, structure);
-            sum += calculateTermWeight(documents);
-       }
+            double weight = calculateTermWeight(documents);
+            sum += weight;
+            if (relevant)
+                weights.put(term, weight);
+        }
+        if (relevant)
+            termsWeights.put(queryId, weights);
         return sum;
     }
     

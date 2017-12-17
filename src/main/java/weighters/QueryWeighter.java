@@ -45,8 +45,7 @@ public class QueryWeighter {
         this.numberDocuments = numberDocuments;
         queryLength = new HashMap<>();
         scorer = new HashMap<>();
-    }
-    
+    }   
        
     /**
      * Get the indexer with scores
