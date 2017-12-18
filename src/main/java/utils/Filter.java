@@ -22,6 +22,7 @@ import org.tartarus.snowball.ext.englishStemmer;
  */
 public class Filter {
     private final List<String> stopWords;
+    private englishStemmer stemmer;
     
     /**
      * Constructor
@@ -29,6 +30,7 @@ public class Filter {
      */
     public Filter() throws FileNotFoundException {
         stopWords = new ArrayList<>();
+        stemmer = new englishStemmer();
     }
     
     /**
@@ -55,7 +57,6 @@ public class Filter {
    }
 
     public String stemmingTerm(String term) {
-        englishStemmer stemmer = new englishStemmer();
         stemmer.setCurrent(term);
         if (stemmer.stem())
             return stemmer.getCurrent();
