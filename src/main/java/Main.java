@@ -18,6 +18,7 @@ import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import weighters.TermWeighter;
 
 /**
  * IR, December 2017
@@ -112,10 +113,12 @@ public class Main {
                 Values nonRelevant = new Values(explicit.getNonRelevantDocuments(queryId));
                 nonRelevantFeedback.put(queryId, nonRelevant);
             }
-            Rocchio rocchio = new Rocchio(queries, feedback, documentWeighter.getIndexer(), relevantFeedback, nonRelevantFeedback);
+            TermWeighter termWeighter = new TermWeighter(documentWeighter.getIndexer());
+            Rocchio rocchio = new Rocchio(queries, feedback, relevantFeedback, nonRelevantFeedback, termWeighter);
             rocchio.calculateRocchio();
-            Map<Integer, Map<String, Double>> termsWeight = rocchio.getTermsWeights();
-            QueryExpansion expansion = new QueryExpansion(relevantFeedback, termsWeight);
+            Map<Integer, Map<String, Double>> termsWeight = termWeighter.getTermsWeights();
+            termWeighter = new TermWeighter(documentWeighter.getIndexer());
+            QueryExpansion expansion = new QueryExpansion(termsWeight, termWeighter, relevantFeedback, queries);
         } else {
             System.err.println("ERROR: Invalid number of arguments!");
             System.out.println("USAGE: <file/dir> <stopwords> <queries> <gold standard> <indexer weights> <ranked queries>");

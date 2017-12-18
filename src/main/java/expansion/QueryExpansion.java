@@ -1,6 +1,5 @@
 package expansion;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,23 +9,29 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import utils.Values;
 import org.deeplearning4j.models.word2vec.Word2Vec;
 import org.deeplearning4j.text.sentenceiterator.BasicLineIterator;
 import org.deeplearning4j.text.sentenceiterator.SentenceIterator;
 import org.deeplearning4j.text.tokenization.tokenizer.preprocessor.CommonPreprocessor;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFactory;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
+import utils.Values;
+import weighters.TermWeighter;
 
 public class QueryExpansion {
-    private Map<Integer, Values> relevantDocuments;
     private Map<Integer, Map<String, Double>> termsWeight;
+    private TermWeighter termWeighter;
+    private Map<Integer, Values> relevant;
+    private Map<Integer, List<String>> queries;
             
-    public QueryExpansion(Map<Integer, Values> relevantDocuments, Map<Integer, Map<String, Double>> termsWeight) {
-        this.relevantDocuments = relevantDocuments;
+    public QueryExpansion(Map<Integer, Map<String, Double>> termsWeight, TermWeighter termWeighter, 
+            Map<Integer, Values> relevant, Map<Integer, List<String>> queries) {
         this.termsWeight = termsWeight;
+        this.termWeighter = termWeighter;
+        this.relevant = relevant;
+        this.queries = queries;
         addSimilarTermsToQuery();
-        //addHigherTermsToQuery();
+        addHigherTermsToQuery();
     }
     
     private void addSimilarTermsToQuery() {
@@ -55,20 +60,31 @@ public class QueryExpansion {
             for (Map.Entry<Integer, Map<String, Double>> query : termsWeight.entrySet()) {
                 Map<String, Double> newTerms = new HashMap<>();
                 Map<String, Double> terms = query.getValue();
+                List<String> newQueries = new ArrayList<>();
                 for (Map.Entry<String, Double> term : terms.entrySet()) {
                     newTerms.put(term.getKey(), term.getValue());
+                    newQueries.add(term.getKey());
                     Collection<String> lst = vec.wordsNearest(term.getKey(), 3);
-                    for (String word : lst)
-                        newTerms.put(word, -1.0);
+                    for (String word : lst) {
+                        newTerms.put(word, 0.0);
+                        newQueries.add(word);
+                    }
                 }
+                queries.put(query.getKey(), newQueries);
                 termsWeight.put(query.getKey(), newTerms);
             }
+            recalculateWeightOfTerms();
         } catch (FileNotFoundException ex) {
             System.err.println("ERROR: File of sentences not found!");
             System.exit(1);
         }
     }
     
+    private void recalculateWeightOfTerms() {
+        for (Map.Entry<Integer, List<String>> query : queries.entrySet())
+            termWeighter.calculateWeightsOfQuery(query.getKey(), query.getValue(), relevant, true);
+        termsWeight = termWeighter.getTermsWeights();
+    }
     private void addHigherTermsToQuery() {
         sortTermsOnQuery();
         for (Map.Entry<Integer, Map<String, Double>> query : termsWeight.entrySet()) {
