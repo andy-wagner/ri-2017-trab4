@@ -11,7 +11,6 @@ import parsers.Parser;
 import parsers.QueryParser;
 import parsers.XMLParser;
 import tokenizers.CompleteTokenizer;
-import utils.Filter;
 import utils.Values;
 import weighters.QueryWeighter;
 import java.io.File;
@@ -53,15 +52,8 @@ public class Main {
             List<Document> documents = documentReader.getDocuments();
             CompleteTokenizer documentTokenizer = new CompleteTokenizer();
             // Tokenize all documents
-            documentTokenizer.tokenize(documents);
+            documentTokenizer.tokenize(documents, new File(args[1]));
             Map<Integer, List<String>> documentTerms = documentTokenizer.getTerms();
-            Filter filter = new Filter();
-            // Load stopwords
-            filter.loadStopwords(new File(args[1]));
-            // Apply stopwording filtering
-            documentTerms = filter.stopwordsFiltering(documentTerms);
-            // Apply stemming
-            documentTerms = filter.stemmingWords(documentTerms);
             IndexerCreator documentIndexCreator = new IndexerCreator(documentTerms);
             // Create an indexer
             documentIndexCreator.createIndexer();
@@ -84,13 +76,8 @@ public class Main {
             List<Document> queryDocuments = queryReader.getDocuments();
             CompleteTokenizer queryTokenizer = new CompleteTokenizer();
             // Tokenize terms of queries
-            queryTokenizer.tokenize(queryDocuments);
+            queryTokenizer.tokenize(queryDocuments, new File(args[1]));
             Map<Integer, List<String>> queries = queryTokenizer.getTerms();
-            // Apply stopwording filtering
-            queries = filter.stopwordsFiltering(queries);
-            // Apply stemming
-            queries = filter.stemmingWords(queries);
-            // Create an indexer for queries to calculate weights later
             IndexerCreator queryCreator = new IndexerCreator(queries);
             queryCreator.createIndexer();
             Map<String, Values> queryIndexer = queryCreator.getIndexer();
@@ -102,7 +89,6 @@ public class Main {
             queryWeighter.calculateDocumentScore(documentIndexer);
             // Write results to file
             queryWeighter.writeToFile(new File(args[5]));
-            // EndTime of processing queries
             Map<Integer, Values> queryScorer = queryWeighter.getQueryScorer();
             // Gold Standard file
             File gsFile = new File(args[3]);

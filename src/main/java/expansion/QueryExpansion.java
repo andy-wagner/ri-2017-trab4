@@ -30,8 +30,50 @@ public class QueryExpansion {
     public QueryExpansion(Map<Integer, Values> relevantDocuments, Map<Integer, Map<String, Double>> termsWeight) {
         this.relevantDocuments = relevantDocuments;
         this.termsWeight = termsWeight;
-        addHigherTermsToQuery();
-        //test();
+        System.out.println(termsWeight.get(1));
+        //addSimilarTermsToQuery();
+        //addHigherTermsToQuery();
+    }
+    
+    private void addSimilarTermsToQuery() {
+        try {
+            String filePath = "cranfield_sentences.txt";
+            log.info("Load & Vectorize Sentences....");
+            // Strip white space before and after for each line
+            SentenceIterator iter = new BasicLineIterator(filePath);
+            // Split on white spaces in the line to get words
+            TokenizerFactory t = new DefaultTokenizerFactory();
+            
+            /*
+            CommonPreprocessor will apply the following regex to each token: [\d\.:,"'\(\)\[\]|/?!;]+
+            So, effectively all numbers, punctuation symbols and some special symbols are stripped off.
+            Additionally it forces lower case for all tokens.
+            */
+            t.setTokenPreProcessor(new CommonPreprocessor());
+            
+            log.info("Building model....");
+            Word2Vec vec = new Word2Vec.Builder()
+                    .minWordFrequency(5)
+                    .iterations(1)
+                    .layerSize(100)
+                    .seed(42)
+                    .windowSize(5)
+                    .iterate(iter)
+                    .tokenizerFactory(t)
+                    .build();
+            
+            log.info("Fitting Word2Vec model....");
+            vec.fit();
+            
+            log.info("Writing word vectors to text file....");
+            
+            // Prints out the closest 10 words to "day". An example on what to do with these Word Vectors.
+            log.info("Closest Words:");
+            Collection<String> lst = vec.wordsNearest("light", 3);
+            System.out.println("10 Words closest to 'light': " + lst);
+        } catch (FileNotFoundException ex) {
+            java.util.logging.Logger.getLogger(QueryExpansion.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     private void addHigherTermsToQuery() {
@@ -72,48 +114,5 @@ public class QueryExpansion {
         for (Map.Entry<String, Double> entry: entries)
             result.put(entry.getKey(), entry.getValue());
         return result;
-    }
-    
-    private void test() {
-        try {
-            // Gets Path to Text file
-            String filePath = "raw_sentences.txt";
-            
-            log.info("Load & Vectorize Sentences....");
-            // Strip white space before and after for each line
-            SentenceIterator iter = new BasicLineIterator(filePath);
-            // Split on white spaces in the line to get words
-            TokenizerFactory t = new DefaultTokenizerFactory();
-            
-            /*
-            CommonPreprocessor will apply the following regex to each token: [\d\.:,"'\(\)\[\]|/?!;]+
-            So, effectively all numbers, punctuation symbols and some special symbols are stripped off.
-            Additionally it forces lower case for all tokens.
-            */
-            t.setTokenPreProcessor(new CommonPreprocessor());
-            
-            log.info("Building model....");
-            Word2Vec vec = new Word2Vec.Builder()
-                    .minWordFrequency(5)
-                    .iterations(1)
-                    .layerSize(100)
-                    .seed(42)
-                    .windowSize(5)
-                    .iterate(iter)
-                    .tokenizerFactory(t)
-                    .build();
-            
-            log.info("Fitting Word2Vec model....");
-            vec.fit();
-            
-            log.info("Writing word vectors to text file....");
-            
-            // Prints out the closest 10 words to "day". An example on what to do with these Word Vectors.
-            log.info("Closest Words:");
-            Collection<String> lst = vec.wordsNearest("day", 10);
-            System.out.println("10 Words closest to 'day': " + lst);
-        } catch (FileNotFoundException ex) {
-            java.util.logging.Logger.getLogger(QueryExpansion.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 }

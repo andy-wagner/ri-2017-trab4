@@ -3,11 +3,8 @@ package utils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 import org.tartarus.snowball.ext.englishStemmer;
 
 /**
@@ -53,43 +50,16 @@ public class Filter {
         }
     }
     
-    /**
-     * Apply the stopwording filtering
-     * If there's any term in the stopwording list, it'll be removed from terms list
-     * @param terms
-     * @return filtered words
-     */
-    public Map<Integer, List<String>> stopwordsFiltering(Map<Integer, List<String>> terms) {
-        Map<Integer, List<String>> result = new HashMap<>();
-        for (Map.Entry<Integer, List<String>> entry : terms.entrySet()) {
-            List<String> words = entry.getValue();
-            List<String> filter = words.stream()
-                    .filter(line -> !stopWords.contains(line))
-                    .collect(Collectors.toList());
-            result.put(entry.getKey(), filter);
-        }
-        return result;
-    }
-    
-    /**
-     * Stemming terms
-     * @param terms
-     * @return terms
-     */
-    public Map<Integer, List<String>> stemmingWords(Map<Integer, List<String>> terms) {
-        Map<Integer, List<String>> result = new HashMap<>();
+   public List<String> getStopWords() {
+       return stopWords;
+   }
+
+    public String stemmingTerm(String term) {
         englishStemmer stemmer = new englishStemmer();
-        for (Map.Entry<Integer, List<String>> entry : terms.entrySet()) {
-            List<String> words = entry.getValue();
-            for (int i = 0; i < words.size(); i++) {
-                String x = words.get(i);
-                stemmer.setCurrent(words.get(i));
-                if (stemmer.stem()) {
-                    words.set(i, stemmer.getCurrent());
-                }
-            }
-            result.put(entry.getKey(), words);
-        }
-        return result;
+        stemmer.setCurrent(term);
+        if (stemmer.stem())
+            return stemmer.getCurrent();
+        else
+            return term;
     } 
 }

@@ -1,6 +1,7 @@
 package tokenizers;
 
 import documents.Document;
+import java.io.File;
 import java.util.List;
 
 /**
@@ -21,5 +22,5 @@ public interface Tokenizer {
      * Tokenizing documents
      * @param documents 
      */
-    public void tokenize(List<Document> documents);
+    public void tokenize(List<Document> documents, File stopwordsFile);
 }
