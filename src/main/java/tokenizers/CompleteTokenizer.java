@@ -2,10 +2,16 @@ package tokenizers;
 
 import documents.Document;
 import documents.XMLDocument;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import utils.CranfieldFileCreator;
 
 /**
  * IR, November 2017
@@ -49,8 +55,12 @@ public class CompleteTokenizer implements Tokenizer{
             int id = document.getId();
             String content;
             // Use title in case of be a XML file
-            if (document instanceof XMLDocument)
+            if (document instanceof XMLDocument) {
+                CranfieldFileCreator creator = new CranfieldFileCreator("cranfield_sentences.txt");
                 content = ((XMLDocument) document).getTitle() + "\n" + document.getText();
+                String[] words = content.split("\\s+.\\s+");
+                creator.appendContent(words);
+            }
             else
                 content = document.getText();
             // Remove some special characters
@@ -61,9 +71,7 @@ public class CompleteTokenizer implements Tokenizer{
             List<String> words = new ArrayList<>();
             for (int i = 0; i < text.length; i++) {
                 String term = text[i];
-                /*
-                * Remove '-' in small terms. Otherwise, keep the term
-                */
+                // Remove '-' in small terms. Otherwise, keep the term
                 if (term.contains("-")) {
                     term = term.replaceAll(".", "");
                     // If theres is a term like '--2', change to '-2'.
