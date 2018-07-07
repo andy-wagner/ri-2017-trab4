@@ -1,4 +1,4 @@
-# ri-2017-trab4
+# Relevance Feedback
 Application and evaluation of methods for relevance feedback and thesaurus, based on query expansion.
 
 ## How To Run
